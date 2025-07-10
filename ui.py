@@ -41,6 +41,29 @@ def generate_mermaid(history, initial_query):
         lines.append(f"{tool_node} --> {resp_node}")
         prev = resp_node
     return "\n".join(lines)
+import html
+
+def generate_mermaid(history, initial_query):
+    def safe_label(text):
+        text = text.replace('"', "'")       # Replace double quotes
+        text = text.replace("`", "'")       # Replace backticks
+        text = text.replace("\n", " ")      # Remove newlines
+        text = text.strip()
+        return text[:60] + "..." if len(text) > 60 else text  # Truncate long text
+
+    lines = ["graph LR"]
+    prev = f'Query["{safe_label(initial_query)}"]'
+
+    for i, step in enumerate(history):
+        tool_node = f"Tool{i}[{step['tool']}]"
+        resp_label = safe_label(step['response'])
+        resp_node = f"Resp{i}[\"{resp_label}\"]"
+        lines.append(f"{prev} --> {tool_node}")
+        lines.append(f"{tool_node} --> {resp_node}")
+        prev = resp_node
+
+    return "\n".join(lines)
+
 
 # Streamlit UI
 st.set_page_config(page_title="Tool Chain Visualizer", layout="wide")
